@@ -10,10 +10,10 @@ patterns used
 
 🔧 step by step 🔧
 .   particle class inside sketch.js
-*   particles with applyForce, update, render, dampen (scaleVelocity)
+.   particles with applyForce, update, render, dampen (scaleVelocity)
         test generating random particles across the screen with initial y
         velocity ➜ apply gravity
-    edges() without this.r. if/else
+*   edges() without this.r. if/else
         make sure this works with many particles before adding this.r
     create particles in circle using polar coordinates, r=42, map [0 ➜ 2π]
     connect all particles with lines using nested loops
@@ -58,6 +58,7 @@ function draw() {
         p.show()
         p.update()
         p.applyForce(gravity(0.1))
+        p.edges()
     }
 }
 
@@ -75,6 +76,7 @@ class Particle {
     }
 
     show() {
+        // the third argument is diameter
         circle(this.pos.x, this.pos.y, this.r*2)
     }
 
@@ -88,5 +90,29 @@ class Particle {
         // in this world, m = 1.
         // F = ma, and because m is 1, F = a, or more importantly, a = F.
         this.acc.add(force)
+    }
+
+    // bounces off the edges
+    edges() {
+        // right
+        if (this.pos.x + this.r > width) {
+            this.vel.x *= -1
+            this.pos.x = width - this.r
+        }
+        // left
+        else if (this.pos.x - this.r < 0) {
+            this.pos.x = this.r
+            this.vel.x *= -1
+        }
+        // bottom (positive y's are downwards). bounce harder on bottom
+        else if (this.pos.y + this.r > height) {
+            this.vel.y *= -1.5
+            this.pos.y = height - this.r
+        }
+        // top
+        else if (this.pos.y - this.r < 0) {
+            this.vel.y *= -1
+            this.pos.y = this.r
+        }
     }
 }
