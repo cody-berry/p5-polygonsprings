@@ -9,8 +9,8 @@ patterns used
     gravityForce method
 
 🔧 step by step 🔧
-    particle class inside sketch.js
-    particles with applyForce, update, render, dampen (scaleVelocity)
+.   particle class inside sketch.js
+*   particles with applyForce, update, render, dampen (scaleVelocity)
         test generating random particles across the screen with initial y
         velocity ➜ apply gravity
     edges() without this.r. if/else
@@ -33,7 +33,7 @@ TODO
  */
 
 let font
-let p
+let particles = []
 
 function preload() {
     font = loadFont('fonts/Meiryo-01.ttf')
@@ -43,15 +43,26 @@ function setup() {
     createCanvas(640, 360)
     colorMode(HSB, 360, 100, 100, 100)
     console.log("🐳")
-    
-    p = new Particle(width/2, height/2)
+
+    for (let i = 0; i < 100; i++) {
+        let p = new Particle(random(width), random(height))
+        particles.push(p)
+    }
 }
 
 function draw() {
     background(234, 34, 24)
     stroke(0, 0, 100, 70)
     noStroke()
-    p.show()
+    for (let p of particles) {
+        p.show()
+        p.update()
+        p.applyForce(gravity(0.1))
+    }
+}
+
+function gravity(strength) {
+    return new p5.Vector(0, strength)
 }
 
 // a simple particle
@@ -65,5 +76,17 @@ class Particle {
 
     show() {
         circle(this.pos.x, this.pos.y, this.r*2)
+    }
+
+    update() {
+        this.vel.add(this.acc)
+        this.pos.add(this.vel)
+        this.acc.mult(0)
+    }
+
+    applyForce(force) {
+        // in this world, m = 1.
+        // F = ma, and because m is 1, F = a, or more importantly, a = F.
+        this.acc.add(force)
     }
 }
