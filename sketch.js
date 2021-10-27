@@ -13,13 +13,13 @@ patterns used
 .   particles with applyForce, update, render, dampen (scaleVelocity)
         test generating random particles across the screen with initial y
         velocity ➜ apply gravity
-*   edges() without this.r. if/else
+.   edges() without this.r. if/else
         make sure this works with many particles before adding this.r
-    create particles in circle using polar coordinates, r=42, map [0 ➜ 2π]
-    connect all particles with lines using nested loops
+.   create particles in circle using polar coordinates, r=42, map [0 ➜ 2π]
+*   connect all particles with lines using nested loops
         for (const p of particles) {
             for (const other of particles) {
-    spring force method
+*   spring force method
         if (p !== other)
             p.applyForce(springForce(p, other, RL=150, K=0.05))
 
@@ -34,6 +34,11 @@ TODO
 
 let font
 let particles = []
+let VERTICES = 7 // the number of vertices in our circle
+let RADIUS = 42 // the radius of the circle
+let angle = 0 // the angle we're currently at
+let DELTA_ANGLE // what is the rate that our angle is
+// changing at?
 
 function preload() {
     font = loadFont('fonts/Meiryo-01.ttf')
@@ -44,9 +49,16 @@ function setup() {
     colorMode(HSB, 360, 100, 100, 100)
     console.log("🐳")
 
-    for (let i = 0; i < 100; i++) {
-        let p = new Particle(random(width), random(height))
+    DELTA_ANGLE = 2*PI/VERTICES
+
+    for (let i = 0; i < VERTICES; i++) {
+        let x = // the x coordinate of our particle
+            RADIUS*cos(angle)+width/2
+        let y = // the y coordinate of our particle
+            RADIUS*sin(angle)+height/2
+        let p = new Particle(x, y)
         particles.push(p)
+        angle += DELTA_ANGLE
     }
 }
 
@@ -56,8 +68,8 @@ function draw() {
     noStroke()
     for (let p of particles) {
         p.show()
-        p.update()
-        p.applyForce(gravity(0.1))
+        // p.update()
+        // p.applyForce(gravity(0.1))
         p.edges()
     }
 }
@@ -106,7 +118,7 @@ class Particle {
         }
         // bottom (positive y's are downwards). bounce harder on bottom
         else if (this.pos.y + this.r > height) {
-            this.vel.y *= -1.5
+            this.vel.y *= -1.15
             this.pos.y = height - this.r
         }
         // top
