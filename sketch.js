@@ -16,7 +16,7 @@ patterns used
 .   edges() without this.r. if/else
         make sure this works with many particles before adding this.r
 .   create particles in circle using polar coordinates, r=42, map [0 ➜ 2π]
-*   connect all particles with lines using nested loops
+&   connect all particles with lines using nested loops
         for (const p of particles) {
             for (const other of particles) {
 *   spring force method
@@ -65,13 +65,23 @@ function setup() {
 function draw() {
     background(234, 34, 24)
     stroke(0, 0, 100, 70)
-    noStroke()
+    fill(0, 0, 100)
     for (let p of particles) {
         p.show()
-        // p.update()
+        p.update()
         // p.applyForce(gravity(0.1))
         p.edges()
+        // let's connect everyone with springs!
+        for (let other of particles) {
+            // if other != p...
+            if (other !== p) {
+                // ...we should connect everything.
+                line(p.pos.x, p.pos.y, other.pos.x, other.pos.y)
+            }
+        }
     }
+
+
 }
 
 function gravity(strength) {
@@ -118,7 +128,7 @@ class Particle {
         }
         // bottom (positive y's are downwards). bounce harder on bottom
         else if (this.pos.y + this.r > height) {
-            this.vel.y *= -1.15
+            this.vel.y *= -2
             this.pos.y = height - this.r
         }
         // top
