@@ -56,7 +56,8 @@ function setup() {
             RADIUS*cos(angle)+width/2
         let y = // the y coordinate of our particle
             RADIUS*sin(angle)+height/2
-        let p = new Particle(x, y)
+        let c = color(map(angle, 0, 2*PI, 0, 360)%360, 80, 80)
+        let p = new Particle(x, y, c)
         particles.push(p)
         angle += DELTA_ANGLE
     }
@@ -106,14 +107,17 @@ function springForce(a, b, restLength, k) {
 
 // a simple particle
 class Particle {
-    constructor(x, y) {
+    constructor(x, y, c) {
         this.pos = new p5.Vector(x, y)
         this.vel = p5.Vector.random2D()
         this.acc = new p5.Vector(0, 0)
         this.r = 5
+        this.c = c
     }
 
     show() {
+        fill(this.c)
+        noStroke()
         // the third argument is diameter
         circle(this.pos.x, this.pos.y, this.r*2)
     }
@@ -137,21 +141,30 @@ class Particle {
         if (this.pos.x + this.r > width) {
             this.vel.x *= -1
             this.pos.x = width - this.r
+            // we also want to draw the edge again
+            stroke(this.c)
+            line(width, 0, width, height)
         }
         // left
         else if (this.pos.x - this.r < 0) {
             this.pos.x = this.r
             this.vel.x *= -1
+            stroke(this.c)
+            line(0, 0, 0, height)
         }
         // bottom (positive y's are downwards). bounce harder on bottom
         else if (this.pos.y + this.r > height) {
             this.vel.y *= -1.15
             this.pos.y = height - this.r
+            stroke(this.c)
+            line(0, height, width, height)
         }
         // top
         else if (this.pos.y - this.r < 0) {
             this.vel.y *= -1
             this.pos.y = this.r
+            stroke(this.c)
+            line(0, 0, width, 0)
         }
     }
 }
