@@ -16,7 +16,7 @@ patterns used
 .   edges() without this.r. if/else
         make sure this works with many particles before adding this.r
 .   create particles in circle using polar coordinates, r=42, map [0 ➜ 2π]
-&   connect all particles with lines using nested loops
+.   connect all particles with lines using nested loops
         for (const p of particles) {
             for (const other of particles) {
 *   spring force method
@@ -34,7 +34,7 @@ TODO
 
 let font
 let particles = []
-let VERTICES = 7 // the number of vertices in our circle
+let VERTICES = 5 // the number of vertices in our circle
 let RADIUS = 42 // the radius of the circle
 let angle = 0 // the angle we're currently at
 let DELTA_ANGLE // what is the rate that our angle is
@@ -67,8 +67,6 @@ function draw() {
     stroke(0, 0, 100, 70)
     fill(0, 0, 100)
     for (let p of particles) {
-        p.show()
-        p.update()
         // p.applyForce(gravity(0.1))
         p.edges()
         // let's connect everyone with springs!
@@ -77,15 +75,33 @@ function draw() {
             if (other !== p) {
                 // ...we should connect everything.
                 line(p.pos.x, p.pos.y, other.pos.x, other.pos.y)
+                // we should also draw a line between these particles
+                p.applyForce(springForce(p, other, 150, 0.05))
             }
         }
+        p.applyForce(gravity(0.1))
     }
 
+    // let's show and update everyone!
+    particles.forEach(function(p) {
+        p.show()
+        p.update()
+    })
 
 }
 
 function gravity(strength) {
     return new p5.Vector(0, strength)
+}
+
+// let's exert a spring force on our particles!
+function springForce(a, b, restLength, k) {
+    // Fₛ = x*k where x is the distance between the 2 objects minus the
+    // rest length, k is the spring constant, and Fₛ is the spring force.
+    let x = dist(a.pos.x, a.pos.y, b.pos.x, b.pos.y) - restLength
+    let spring_force = p5.Vector.sub(a.pos, b.pos)
+    spring_force.setMag(-k*x)
+    return spring_force
 }
 
 // a simple particle
@@ -104,6 +120,7 @@ class Particle {
 
     update() {
         this.vel.add(this.acc)
+        this.vel.limit(15)
         this.pos.add(this.vel)
         this.acc.mult(0)
     }
@@ -128,7 +145,7 @@ class Particle {
         }
         // bottom (positive y's are downwards). bounce harder on bottom
         else if (this.pos.y + this.r > height) {
-            this.vel.y *= -2
+            this.vel.y *= -1.15
             this.pos.y = height - this.r
         }
         // top
