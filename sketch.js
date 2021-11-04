@@ -34,7 +34,7 @@ TODO
 
 let font
 let particles = []
-let VERTICES = 8 // the number of vertices in our circle
+let VERTICES = 6 // the number of vertices in our circle
 let RADIUS = 42 // the radius of the circle
 let angle = 0 // the angle we're currently at
 let DELTA_ANGLE // what is the rate that our angle is
@@ -68,7 +68,7 @@ function draw() {
     stroke(0, 0, 100, 70)
     fill(0, 0, 100)
     for (let p of particles) {
-        // p.applyForce(gravity(0.1))
+        p.applyForce(gravity(0.1))
         p.edges()
         // let's connect everyone with springs!
         for (let other of particles) {
@@ -106,6 +106,62 @@ function springForce(a, b, restLength, k) {
     return spring_force
 }
 
+class Banana {
+    constructor(x, y) {
+        this.sheet = loadImage("banana.png")
+        this.pos = new p5.Vector(x, y)
+        this.vel = p5.Vector.random2D()
+        this.acc = new p5.Vector(0, 0)
+        this.broke = false
+    }
+
+    show() {
+        if (!this.broke) {
+            image(this.sheet, this.pos.x, this.pos.y)
+        }
+    }
+
+    update() {
+        this.vel.add(this.acc)
+        this.pos.add(this.vel)
+        this.acc.setMag(0)
+    }
+
+    applyForce(f) {
+        // F = ma. A banana is much heavier than 1 pound, but for the sake
+        // of our animation, we should really assume everything is 1 pound,
+        // so a = F.
+        this.acc.add(f)
+    }
+
+    edges() {
+        // right
+        if (this.pos.x > width) {
+            this.vel.x *= -1
+            this.pos.x = width
+            this.broke = true
+        }
+        // left
+        else if (this.pos.x < 0) {
+            this.pos.x = 0
+            this.vel.x *= -1
+            this.broke = true
+        }
+        // bottom (positive y's are downwards). bounce harder on bottom
+        else if (this.pos.y > height) {
+            this.vel.y *= -1.15
+            this.pos.y = height
+            this.broke = true
+        }
+        // top
+        else if (this.pos.y < 0) {
+            this.vel.y *= -1
+            this.pos.y = 0
+            this.broke = true
+        }
+    }
+}
+
 // a simple line that disappears over time
 class Line {
     constructor(x1, y1, x2, y2, c) {
@@ -114,15 +170,33 @@ class Line {
         this.c = c
         this.lifetime = 100
         this.disappearRate = 6
+        this.bananas = []
+        for (let i = 0; i < 3; i++) {
+            // let's lerp with a random t! (this is the first time I've ever
+            // used lerp in this project)
+            let pos = p5.Vector.lerp(this.a, this.b, random(0, 1))
+            this.bananas.push(new Banana(pos.x, pos.y))
+        }
     }
 
     show() {
+        for (let b of this.bananas) {
+            b.show()
+        }
+
+
         stroke(hue(this.c), saturation(this.c), brightness(this.c), this.lifetime)
         line(this.a.x, this.a.y, this.b.x, this.b.y)
     }
 
     update() {
         this.lifetime -= this.disappearRate
+
+        for (let b of this.bananas) {
+            b.applyForce(gravity(0.01))
+            b.update()
+            b.edges()
+        }
     }
 }
 
@@ -134,26 +208,34 @@ class Particle {
         this.acc = new p5.Vector(0, 0)
         this.r = 5
         this.c = c
-        this.right_line = new Line(width, 0, width, height, this.c)
-        this.left_line = new Line(0, 0, 0, height, this.c)
-        this.top_line = new Line(0, 0, width, 0, this.c)
-        this.bottom_line = new Line(0, height, width, height, this.c)
-        this.right_line.lifetime = 0
-        this.left_line.lifetime = 0
-        this.top_line.lifetime = 0
-        this.bottom_line.lifetime = 0
+        this.right_line = null
+        this.left_line = null
+        this.top_line = null
+        this.bottom_line = null
     }
 
     show() {
+
+
+        // we also need to draw our edges
+        if (this.right_line) {
+            this.right_line.show()
+        }
+        if (this.left_line) {
+            this.left_line.show()
+        }
+        if (this.top_line) {
+            this.top_line.show()
+        }
+        if (this.bottom_line) {
+            this.bottom_line.show()
+        }
+
         fill(this.c)
         noStroke()
+
         // the third argument is diameter
         circle(this.pos.x, this.pos.y, this.r*2)
-        // we also need to draw our edges
-        this.right_line.show()
-        this.left_line.show()
-        this.top_line.show()
-        this.bottom_line.show()
     }
 
     update() {
@@ -162,10 +244,18 @@ class Particle {
         this.pos.add(this.vel)
         this.acc.mult(0)
 
-        this.right_line.update()
-        this.left_line.update()
-        this.top_line.update()
-        this.bottom_line.update()
+        if (this.right_line) {
+            this.right_line.update()
+        }
+        if (this.left_line) {
+            this.left_line.update()
+        }
+        if (this.top_line) {
+            this.top_line.update()
+        }
+        if (this.bottom_line) {
+            this.bottom_line.update()
+        }
     }
 
     applyForce(force) {
