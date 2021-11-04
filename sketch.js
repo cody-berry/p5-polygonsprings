@@ -34,7 +34,7 @@ TODO
 
 let font
 let particles = []
-let VERTICES = 5 // the number of vertices in our circle
+let VERTICES = 8 // the number of vertices in our circle
 let RADIUS = 42 // the radius of the circle
 let angle = 0 // the angle we're currently at
 let DELTA_ANGLE // what is the rate that our angle is
@@ -75,12 +75,13 @@ function draw() {
             // if other != p...
             if (other !== p) {
                 // ...we should connect everything.
+                stroke(0, 0, 100)
                 line(p.pos.x, p.pos.y, other.pos.x, other.pos.y)
                 // we should also draw a line between these particles
                 p.applyForce(springForce(p, other, 150, 0.05))
             }
         }
-        p.applyForce(gravity(0.1))
+        // p.applyForce(gravity(0.01))
     }
 
     // let's show and update everyone!
@@ -105,6 +106,26 @@ function springForce(a, b, restLength, k) {
     return spring_force
 }
 
+// a simple line that disappears over time
+class Line {
+    constructor(x1, y1, x2, y2, c) {
+        this.a = new p5.Vector(x1, y1)
+        this.b = new p5.Vector(x2, y2)
+        this.c = c
+        this.lifetime = 100
+        this.disappearRate = 6
+    }
+
+    show() {
+        stroke(hue(this.c), saturation(this.c), brightness(this.c), this.lifetime)
+        line(this.a.x, this.a.y, this.b.x, this.b.y)
+    }
+
+    update() {
+        this.lifetime -= this.disappearRate
+    }
+}
+
 // a simple particle
 class Particle {
     constructor(x, y, c) {
@@ -113,6 +134,14 @@ class Particle {
         this.acc = new p5.Vector(0, 0)
         this.r = 5
         this.c = c
+        this.right_line = new Line(width, 0, width, height, this.c)
+        this.left_line = new Line(0, 0, 0, height, this.c)
+        this.top_line = new Line(0, 0, width, 0, this.c)
+        this.bottom_line = new Line(0, height, width, height, this.c)
+        this.right_line.lifetime = 0
+        this.left_line.lifetime = 0
+        this.top_line.lifetime = 0
+        this.bottom_line.lifetime = 0
     }
 
     show() {
@@ -120,6 +149,11 @@ class Particle {
         noStroke()
         // the third argument is diameter
         circle(this.pos.x, this.pos.y, this.r*2)
+        // we also need to draw our edges
+        this.right_line.show()
+        this.left_line.show()
+        this.top_line.show()
+        this.bottom_line.show()
     }
 
     update() {
@@ -127,6 +161,11 @@ class Particle {
         this.vel.limit(15)
         this.pos.add(this.vel)
         this.acc.mult(0)
+
+        this.right_line.update()
+        this.left_line.update()
+        this.top_line.update()
+        this.bottom_line.update()
     }
 
     applyForce(force) {
@@ -141,30 +180,25 @@ class Particle {
         if (this.pos.x + this.r > width) {
             this.vel.x *= -1
             this.pos.x = width - this.r
-            // we also want to draw the edge again
-            stroke(this.c)
-            line(width, 0, width, height)
+            this.right_line = new Line(width, 0, width, height, this.c)
         }
         // left
         else if (this.pos.x - this.r < 0) {
             this.pos.x = this.r
             this.vel.x *= -1
-            stroke(this.c)
-            line(0, 0, 0, height)
+            this.left_line = new Line(0, 0, 0, height, this.c)
         }
         // bottom (positive y's are downwards). bounce harder on bottom
         else if (this.pos.y + this.r > height) {
             this.vel.y *= -1.15
             this.pos.y = height - this.r
-            stroke(this.c)
-            line(0, height, width, height)
+            this.bottom_line = new Line(0, height, width, height, this.c)
         }
         // top
         else if (this.pos.y - this.r < 0) {
             this.vel.y *= -1
             this.pos.y = this.r
-            stroke(this.c)
-            line(0, 0, width, 0)
+            this.top_line = new Line(0, 0, width, 0, this.c)
         }
     }
 }
