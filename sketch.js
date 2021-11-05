@@ -34,7 +34,7 @@ TODO
 
 let font
 let particles = []
-let VERTICES = 6 // the number of vertices in our circle
+let VERTICES = 5 // the number of vertices in our circle
 let RADIUS = 42 // the radius of the circle
 let angle = 0 // the angle we're currently at
 let DELTA_ANGLE // what is the rate that our angle is
@@ -164,7 +164,7 @@ class Banana {
 
 // a simple line that disappears over time
 class Line {
-    constructor(x1, y1, x2, y2, c) {
+    constructor(x1, y1, x2, y2, p, c) {
         this.a = new p5.Vector(x1, y1)
         this.b = new p5.Vector(x2, y2)
         this.c = c
@@ -175,6 +175,9 @@ class Line {
             // let's lerp with a random t! (this is the first time I've ever
             // used lerp in this project)
             let pos = p5.Vector.lerp(this.a, this.b, random(0, 1))
+            if (p) {
+                pos = p
+            }
             this.bananas.push(new Banana(pos.x, pos.y))
         }
     }
@@ -193,7 +196,7 @@ class Line {
         this.lifetime -= this.disappearRate
 
         for (let b of this.bananas) {
-            b.applyForce(gravity(0.01))
+            b.applyForce(gravity(0.2))
             b.update()
             b.edges()
         }
@@ -262,9 +265,12 @@ class Particle {
             this.bottom_line.update()
         }
         for (let b of this.bananas) {
-            b.applyForce(gravity(0.01))
+            b.applyForce(gravity(0.2))
             b.update()
             b.edges()
+            if (b.broke) {
+                this.bananas.splice(b)
+            }
         }
     }
 
@@ -287,7 +293,10 @@ class Particle {
                     }
                 }
             }
-            this.right_line = new Line(width, 0, width, height, this.c)
+            this.right_line = new Line(width, 0, width, height, this.pos, this.c)
+            for (let b of this.right_line.bananas) {
+                b.vel.x -= 1
+            }
         }
         // left
         else if (this.pos.x - this.r < 0) {
@@ -300,7 +309,10 @@ class Particle {
                     }
                 }
             }
-            this.left_line = new Line(0, 0, 0, height, this.c)
+            this.left_line = new Line(0, 0, 0, height, this.pos, this.c)
+            for (let b of this.left_line.bananas) {
+                b.vel.x += 1
+            }
         }
         // bottom (positive y's are downwards). bounce harder on bottom
         else if (this.pos.y + this.r > height) {
@@ -313,7 +325,10 @@ class Particle {
                     }
                 }
             }
-            this.bottom_line = new Line(0, height, width, height, this.c)
+            this.bottom_line = new Line(0, height, width, height, this.pos, this.c)
+            for (let b of this.bottom_line.bananas) {
+                b.vel.y -= 2
+            }
         }
         // top
         else if (this.pos.y - this.r < 0) {
@@ -326,7 +341,10 @@ class Particle {
                     }
                 }
             }
-            this.top_line = new Line(0, 0, width, 0, this.c)
+            this.top_line = new Line(0, 0, width, 0, this.pos, this.c)
+            for (let b of this.top_line.bananas) {
+                b.vel.y += 1
+            }
         }
     }
 }
