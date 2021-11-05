@@ -212,6 +212,7 @@ class Particle {
         this.left_line = null
         this.top_line = null
         this.bottom_line = null
+        this.bananas = []
     }
 
     show() {
@@ -229,6 +230,10 @@ class Particle {
         }
         if (this.bottom_line) {
             this.bottom_line.show()
+        }
+        for (let b of this.bananas) {
+            console.log(b)
+            b.show()
         }
 
         fill(this.c)
@@ -256,6 +261,11 @@ class Particle {
         if (this.bottom_line) {
             this.bottom_line.update()
         }
+        for (let b of this.bananas) {
+            b.applyForce(gravity(0.01))
+            b.update()
+            b.edges()
+        }
     }
 
     applyForce(force) {
@@ -270,24 +280,52 @@ class Particle {
         if (this.pos.x + this.r > width) {
             this.vel.x *= -1
             this.pos.x = width - this.r
+            if (this.right_line) {
+                for (let b of this.right_line.bananas) {
+                    if (!b.broke) {
+                        this.bananas.push(b)
+                    }
+                }
+            }
             this.right_line = new Line(width, 0, width, height, this.c)
         }
         // left
         else if (this.pos.x - this.r < 0) {
             this.pos.x = this.r
             this.vel.x *= -1
+            if (this.left_line) {
+                for (let b of this.left_line.bananas) {
+                    if (!b.broke) {
+                        this.bananas.push(b)
+                    }
+                }
+            }
             this.left_line = new Line(0, 0, 0, height, this.c)
         }
         // bottom (positive y's are downwards). bounce harder on bottom
         else if (this.pos.y + this.r > height) {
             this.vel.y *= -1.15
             this.pos.y = height - this.r
+            if (this.bottom_line) {
+                for (let b of this.bottom_line.bananas) {
+                    if (!b.broke) {
+                        this.bananas.push(b)
+                    }
+                }
+            }
             this.bottom_line = new Line(0, height, width, height, this.c)
         }
         // top
         else if (this.pos.y - this.r < 0) {
             this.vel.y *= -1
             this.pos.y = this.r
+            if (this.top_line) {
+                for (let b of this.top_line.bananas) {
+                    if (!b.broke) {
+                        this.bananas.push(b)
+                    }
+                }
+            }
             this.top_line = new Line(0, 0, width, 0, this.c)
         }
     }
